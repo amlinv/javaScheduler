@@ -1,0 +1,68 @@
+IDEA:
+	- Process: set of steps with a defined start and finish
+
+		public interface Process {
+			void	start();
+			void	addStep(Step newStep);
+		}
+
+	- Step: a step in a process
+
+		public interface Step {
+			void	execute (Process process);
+			boolean isBlocking();
+		}
+
+	- AbstractBlockingStep: a step in a process that blocks
+
+		public abstract AbstractBlockingStep extends Step {
+		    public boolean  isBlocking () {
+		        return true;
+		    }
+		}
+
+	- InputSteamReadStep: (TBD: can an asynchronous operation be used instead internally?)
+
+		public class InputStreamReadStep implements Step {
+			private InputStream	inputStream;
+			private int		startOffset;
+			private int		requestLength;
+			private byte[]		buffer;
+
+			private int		result;
+			private Exception	exception;
+
+			public	InputStreamReadStep (InputStream inputStream, byte[] buffer, int startOffset,
+				                     int requestLength);
+
+			public void	execute (Process process) {
+				result = -1;
+				try {
+					result = inputStream.read(inputStream, buffer, startOffset, requestLength);
+				} catch ( Exception exc ) {
+					this.exception = exc;
+				}
+			}
+
+			public int	getResult () {
+				if ( exception != null ) {
+					throw	new RuntimeException("execution failed", this.exception);
+				}
+
+				return	this.result;
+			}
+
+			public boolean	wasExceptionThrown () {
+				return	( this.exception != null );
+			}
+
+			public Exception	getException () {
+				return	this.exception;
+			}
+		}
+
+	- AsyncStep: a step in a process that does not block
+
+		public interface AsyncStep extends Step {
+		}
+
