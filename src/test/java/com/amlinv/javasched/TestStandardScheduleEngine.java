@@ -1,5 +1,6 @@
 package com.amlinv.javasched;
 
+import com.amlinv.javasched.impl.StandardSchedulerEngine;
 import org.junit.Before;
 import org.junit.Test;
 
