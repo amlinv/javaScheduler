@@ -1,0 +1,26 @@
+package com.amlinv.javasched;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+/**
+ * Created by art on 12/7/14.
+ */
+public class SchedulerProcessTest {
+  private SchedulerProcess  schedulerProcess;
+
+  private Step              mockStep;
+
+  @Before
+  public void setupTest () {
+    this.schedulerProcess = Mockito.mock(SchedulerProcess.class);
+
+    this.mockStep = Mockito.mock(Step.class);
+  }
+
+  @Test
+  public void testInterface () {
+    Step nextStep = this.schedulerProcess.getNextStep();
+  }
+}
