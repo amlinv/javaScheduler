@@ -66,3 +66,28 @@ IDEA:
 		public interface AsyncStep extends Step {
 		}
 
+	- Scheduler: decide which process is the next to be scheduled
+		- Implement an EngineSource
+		- RoundRobinScheduler
+			- Simple list of processes
+			- Steps from processes are fed to the Engine in simple round-robin fashion (first come, first served)
+		- PriorityScheduler
+			- List of processes by priority
+			- SimplePriorityScheduler
+				- Higher priority always takes precedence over lower priority
+					- i.e. when a higher priority has an available task, no lower priority will go to the engine until
+					  after the higher priority step hits the engine
+				- Default SinglePriorityScheduler is a RoundRobinProcessScheduler; every process gets selected in
+				 round-robin fashion.
+			- FairnessPriorityScheduler
+				- Higher priority gets more cycles from the Engine, but lower priority steps still have opportunity to
+				  execute
+				- May split threads into two groups: one which allows any priority to run regardless of all available
+				  step priority levels; another which is dedicated to higher priorities first
+
+	- Engine: manage thread pools
+		- Let EngineSource know when a thread is ready for work (really, EngineSource.getNextTask())
+
+	- RunningTask
+		- Notify listener of events (task complete; task exception)
+
