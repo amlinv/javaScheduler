@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -9,9 +11,10 @@
     <packaging>jar</packaging>
     <name>Java Scheduler</name>
     <description>
-        Scheduler of java processes that seeks to optimize the execution of processing tasks by the JVM with minimal
-        threads in order to reduce the overhead of context switching, optimize the utilization of CPU cores, and
-        provide controls to the application over the scheduling of processing tasks.
+        Scheduler of java processes that seeks to optimize the execution of processing tasks by the
+        JVM with minimal threads in order to reduce the overhead of context switching, optimize the
+        utilization of CPU cores, and provide controls to the application over the scheduling of
+        processing tasks.
     </description>
 
     <properties>
@@ -47,17 +50,17 @@
         </dependency>
     </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.2</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
