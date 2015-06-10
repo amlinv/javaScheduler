@@ -175,6 +175,22 @@ public class StepListSchedulerProcessTest {
     hook.onWaitOnQueue();
   }
 
+  @Test
+  public void testSequenceOfSteps() throws Exception {
+    Step[] steps = new Step[3];
+    steps[0] = Mockito.mock(Step.class);
+    steps[1] = Mockito.mock(Step.class);
+    steps[2] = Mockito.mock(Step.class);
+
+    this.process.addStep(steps[0]);
+    this.process.addStep(steps[1]);
+    this.process.addStep(steps[2]);
+
+    assertSame(steps[0], this.process.getNextStep());
+    assertSame(steps[1], this.process.getNextStep());
+    assertSame(steps[2], this.process.getNextStep());
+  }
+
   protected void doWaitForStepTest(boolean onAdd, boolean withInterrupt) throws Exception {
     final CountDownLatch finishedLatch = new CountDownLatch(1);
     this.process.setAutoStop(false);

@@ -40,3 +40,12 @@ Feature: Scheduler
      Then start process "nonblocking03"
      When the process "nonblocking02" completes, process "blocking01" is still running with timeout 1000
      When the process "nonblocking03" completes, process "blocking01" is still running with timeout 1000
+
+  Scenario: Verify slowness on one StepListSchedulerProcess does not affect another
+    Given a scheduler with 5 processing threads and 5 blocking processing threads
+      And process "blocking01" with a 100 millisecond blocking step
+      And process "blocking02" with a 10 millisecond blocking step
+     Then the scheduler is started
+     Then start process "blocking01"
+     Then start process "blocking02"
+     When the process "blocking02" completes, process "blocking01" is still running with timeout 1000

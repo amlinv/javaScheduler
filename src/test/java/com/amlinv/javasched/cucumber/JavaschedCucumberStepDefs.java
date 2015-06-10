@@ -129,7 +129,7 @@ public class JavaschedCucumberStepDefs {
   // BLOCKING AND NON-BLOCKING
   //////////////////////////////
 
-  @Given("^a scheduler with (\\d+) processing thread and (\\d+) blocking processing thread$")
+  @Given("^a scheduler with (\\d+) processing threads? and (\\d+) blocking processing threads?$")
   public void a_scheduler_with_processing_thread_and_blocking_processing_thread(
       int numNonBlockingThread, int numBlockingThread)
       throws Throwable {
