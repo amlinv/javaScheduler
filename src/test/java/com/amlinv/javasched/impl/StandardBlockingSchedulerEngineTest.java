@@ -17,8 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
 
 /**
- * TBD: consider a way to eliminate potential false-negatives due to timing TBD: one idea - add
- * interception points to the code that are normally unused
+ *
  */
 public class StandardBlockingSchedulerEngineTest {
 

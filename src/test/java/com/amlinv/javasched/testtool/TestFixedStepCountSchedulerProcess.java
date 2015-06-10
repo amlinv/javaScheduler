@@ -1,7 +1,7 @@
 package com.amlinv.javasched.testtool;
 
 import com.amlinv.javasched.Step;
-import com.amlinv.javasched.impl.StepListSchedulerProcess;
+import com.amlinv.javasched.process.StepListSchedulerProcess;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

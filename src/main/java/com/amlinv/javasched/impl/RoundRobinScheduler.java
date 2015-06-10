@@ -8,23 +8,26 @@ import com.amlinv.javasched.SchedulerProcessExecutionSlip;
 import com.amlinv.javasched.Step;
 import com.amlinv.javasched.engine.ProcessStepExecutionListener;
 import com.amlinv.javasched.engine.ProcessStepExecutionSlipFactory;
+import com.amlinv.javasched.engine.StandardProcessExecutionSlip;
+import com.amlinv.javasched.engine.StandardProcessExecutionSlipFactory;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Scheduler of processes, each of which is a serialized source of processing steps in which each
  * step can be blocking or non-blocking.  Steps are fed into the blocking and non-blocking engines
- * based on the type of step, and processes iterate over steps until no more steps are available,
- * or one of the steps has a fatal error.
+ * based on the type of step, and processes iterate over steps until no more steps are available, or
+ * one of the steps has a fatal error.
  *
  * Created by art on 12/10/14.
  */
-public class StandardScheduler implements Scheduler {
+public class RoundRobinScheduler implements Scheduler {
 
-  private final Set<SchedulerProcess> processSet;
+  //  private final Set<StandardProcessExecutionSlip> processSet;
+  private final Map<SchedulerProcess, StandardProcessExecutionSlip> processes;
   private final Object schedulerSync = new Object();
 
   private NonBlockingSchedulerEngine nonBlockingEngine = new StandardNonBlockingSchedulerEngine();
@@ -32,12 +35,14 @@ public class StandardScheduler implements Scheduler {
 
   private boolean started;
 
-  private ProcessStepExecutionSlipFactory executionSlipFactory;
+  private ProcessStepExecutionSlipFactory stepExecutionSlipFactory;
+  private StandardProcessExecutionSlipFactory processExecutionSlipFactory;
 
-  public StandardScheduler() {
-    this.processSet = new HashSet<>();
+  public RoundRobinScheduler() {
+    this.processes = new HashMap<>();
     this.started = false;
-    this.executionSlipFactory = new ProcessStepExecutionSlipFactory();
+    this.stepExecutionSlipFactory = new ProcessStepExecutionSlipFactory();
+    this.processExecutionSlipFactory = new StandardProcessExecutionSlipFactory();
   }
 
   public NonBlockingSchedulerEngine getNonBlockingEngine() {
@@ -56,12 +61,13 @@ public class StandardScheduler implements Scheduler {
     this.blockingEngine = newEngine;
   }
 
-  public ProcessStepExecutionSlipFactory getExecutionSlipFactory() {
-    return executionSlipFactory;
+  public ProcessStepExecutionSlipFactory getStepExecutionSlipFactory() {
+    return stepExecutionSlipFactory;
   }
 
-  public void setExecutionSlipFactory(ProcessStepExecutionSlipFactory executionSlipFactory) {
-    this.executionSlipFactory = executionSlipFactory;
+  public void setStepExecutionSlipFactory(
+      ProcessStepExecutionSlipFactory stepExecutionSlipFactory) {
+    this.stepExecutionSlipFactory = stepExecutionSlipFactory;
   }
 
   @Override
@@ -85,34 +91,44 @@ public class StandardScheduler implements Scheduler {
       }
     }
 
-    boolean notPreviouslySubmitted;
-    synchronized (this.processSet) {
-      notPreviouslySubmitted = this.processSet.add(newProcess);
+    StandardProcessExecutionSlip executionSlip = this.prepareProcessExecutionSlip(newProcess);
+
+    boolean previouslySubmitted;
+    synchronized (this.processes) {
+      previouslySubmitted = this.processes.containsKey(newProcess);
+      if (!previouslySubmitted) {
+        this.processes.put(newProcess, executionSlip);
+      }
     }
 
-    if (!notPreviouslySubmitted) {
+    if (previouslySubmitted) {
       throw new IllegalStateException("process is already active");
     }
 
+    executionSlip.processStarted();
     this.advanceProcessExecution(newProcess);
 
-    // TBD
-    return null;
+    return executionSlip;
   }
 
   @Override
   public List<SchedulerProcess> getProcessList() {
     LinkedList<SchedulerProcess> result;
-    synchronized (this.processSet) {
-      result = new LinkedList<SchedulerProcess>(this.processSet);
+    synchronized (this.processes) {
+      result = new LinkedList<SchedulerProcess>(this.processes.keySet());
     }
 
     return result;
   }
 
   protected void onProcessCompletion(SchedulerProcess process) {
-    synchronized (this.processSet) {
-      this.processSet.remove(process);
+    StandardProcessExecutionSlip executionSlip;
+    synchronized (this.processes) {
+      executionSlip = this.processes.remove(process);
+    }
+
+    if (executionSlip != null) {
+      executionSlip.processStopped();
     }
   }
 
@@ -146,27 +162,33 @@ public class StandardScheduler implements Scheduler {
     this.onProcessCompletion(process);
   }
 
+  protected StandardProcessExecutionSlip prepareProcessExecutionSlip(
+      final SchedulerProcess theProcess) {
+
+    return this.processExecutionSlipFactory.createSlip(theProcess);
+  }
+
   protected Step prepareStepExecutionSlip(SchedulerProcess process, Step step) {
     ProcessStepExecutionListener listener = this.prepareStepExecutionListener(process);
 
-    Step result = this.executionSlipFactory.createProcessStepExecutionSlip(step, listener);
+    Step result = this.stepExecutionSlipFactory.createProcessStepExecutionSlip(step, listener);
 
     return result;
   }
 
   /**
-   * Prepare a process step execution listener that will transition the process to the next state
-   * in its execution.
+   * Prepare a process step execution listener that will transition the process to the next state in
+   * its execution.
    *
    * @param process the process for which a step will be executed.
-   * @return the new listener that will advance the state of the given process on completion of
-   * the current step.
+   * @return the new listener that will advance the state of the given process on completion of the
+   * current step.
    */
   protected ProcessStepExecutionListener prepareStepExecutionListener(
       final SchedulerProcess process) {
 
     return new ProcessStepExecutionListener() {
-      private StandardScheduler parent = StandardScheduler.this;
+      private RoundRobinScheduler parent = RoundRobinScheduler.this;
 
       @Override
       public void onStepStarted() {

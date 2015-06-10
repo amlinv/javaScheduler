@@ -4,8 +4,8 @@ import com.amlinv.javasched.SchedulerProcess;
 import com.amlinv.javasched.Step;
 import com.amlinv.javasched.impl.StandardBlockingSchedulerEngine;
 import com.amlinv.javasched.impl.StandardNonBlockingSchedulerEngine;
-import com.amlinv.javasched.impl.StandardScheduler;
-import com.amlinv.javasched.impl.StepListSchedulerProcess;
+import com.amlinv.javasched.impl.RoundRobinScheduler;
+import com.amlinv.javasched.process.StepListSchedulerProcess;
 import com.amlinv.javasched.testtool.TestFixedStepCountSchedulerProcess;
 
 import cucumber.api.java.en.And;
@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
@@ -58,14 +57,14 @@ public class JavaschedCucumberStepDefs {
 
   private static final Logger LOG = LoggerFactory.getLogger(JavaschedCucumberStepDefs.class);
 
-  private StandardScheduler scheduler;
+  private RoundRobinScheduler scheduler;
   private List<TestFixedStepCountSchedulerProcess> testProcessList = new LinkedList<>();
 
   private Map<String, SchedulerProcess> namedProcesses = new TreeMap<>();
 
   @Given("^a scheduler$")
   public void a_scheduler() throws Throwable {
-    this.scheduler = new StandardScheduler();
+    this.scheduler = new RoundRobinScheduler();
   }
 
   @Then("^the scheduler should be created$")
@@ -141,7 +140,7 @@ public class JavaschedCucumberStepDefs {
     StandardNonBlockingSchedulerEngine nonBlockingEngine = new StandardNonBlockingSchedulerEngine();
     nonBlockingEngine.setProcessorCount(numNonBlockingThread);
 
-    this.scheduler = new StandardScheduler();
+    this.scheduler = new RoundRobinScheduler();
     this.scheduler.setBlockingEngine(blockingEngine);
     this.scheduler.setNonBlockingEngine(nonBlockingEngine);
   }

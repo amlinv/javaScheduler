@@ -17,11 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class StandardSchedulerTest {
+public class RoundRobinSchedulerTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StandardSchedulerTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RoundRobinSchedulerTest.class);
 
-  private StandardScheduler standardScheduler;
+  private RoundRobinScheduler roundRobinScheduler;
 
   private NonBlockingSchedulerEngine mockNonBlockingEngine;
   private BlockingSchedulerEngine mockBlockingEngine;
@@ -32,7 +32,7 @@ public class StandardSchedulerTest {
 
   @Before
   public void setupTest() {
-    this.standardScheduler = new StandardScheduler();
+    this.roundRobinScheduler = new RoundRobinScheduler();
 
     this.mockNonBlockingEngine = Mockito.mock(NonBlockingSchedulerEngine.class);
     this.mockBlockingEngine = Mockito.mock(BlockingSchedulerEngine.class);
@@ -44,40 +44,40 @@ public class StandardSchedulerTest {
 
   @Test
   public void testGetSetNonBlockingEngine() {
-    assertNotNull(this.standardScheduler.getNonBlockingEngine());
-    assertNotSame(this.mockNonBlockingEngine, this.standardScheduler.getNonBlockingEngine());
+    assertNotNull(this.roundRobinScheduler.getNonBlockingEngine());
+    assertNotSame(this.mockNonBlockingEngine, this.roundRobinScheduler.getNonBlockingEngine());
 
-    this.standardScheduler.setNonBlockingEngine(this.mockNonBlockingEngine);
-    assertSame(this.mockNonBlockingEngine, this.standardScheduler.getNonBlockingEngine());
+    this.roundRobinScheduler.setNonBlockingEngine(this.mockNonBlockingEngine);
+    assertSame(this.mockNonBlockingEngine, this.roundRobinScheduler.getNonBlockingEngine());
   }
 
   @Test
   public void testGetSetBlockingEngine() {
-    assertNotNull(this.standardScheduler.getBlockingEngine());
-    assertNotSame(this.mockBlockingEngine, this.standardScheduler.getBlockingEngine());
+    assertNotNull(this.roundRobinScheduler.getBlockingEngine());
+    assertNotSame(this.mockBlockingEngine, this.roundRobinScheduler.getBlockingEngine());
 
-    this.standardScheduler.setBlockingEngine(this.mockBlockingEngine);
-    assertSame(this.mockBlockingEngine, this.standardScheduler.getBlockingEngine());
+    this.roundRobinScheduler.setBlockingEngine(this.mockBlockingEngine);
+    assertSame(this.mockBlockingEngine, this.roundRobinScheduler.getBlockingEngine());
   }
 
   @Test
   public void testGetSetProcessStepExecutionSlipFactory() {
-    assertNotNull(this.standardScheduler.getExecutionSlipFactory());
+    assertNotNull(this.roundRobinScheduler.getStepExecutionSlipFactory());
 
-    this.standardScheduler.setExecutionSlipFactory(this.mockExecutionSlipFactory);
-    assertSame(this.mockExecutionSlipFactory, this.standardScheduler.getExecutionSlipFactory());
+    this.roundRobinScheduler.setStepExecutionSlipFactory(this.mockExecutionSlipFactory);
+    assertSame(this.mockExecutionSlipFactory, this.roundRobinScheduler.getStepExecutionSlipFactory());
   }
 
   @Test
   public void testStart() {
     this.setupStandardScheduler();
 
-    this.standardScheduler.start();
+    this.roundRobinScheduler.start();
 
     Mockito.verify(this.mockBlockingEngine).start();
     Mockito.verify(this.mockNonBlockingEngine).start();
 
-    assertEquals(0, this.standardScheduler.getProcessList().size());
+    assertEquals(0, this.roundRobinScheduler.getProcessList().size());
   }
 
   @Test
@@ -86,10 +86,10 @@ public class StandardSchedulerTest {
 
     Mockito.when(this.mockProcess.getNextStep()).thenReturn(null);
 
-    this.standardScheduler.start();
-    this.standardScheduler.startProcess(this.mockProcess);
+    this.roundRobinScheduler.start();
+    this.roundRobinScheduler.startProcess(this.mockProcess);
 
-    assertEquals(0, this.standardScheduler.getProcessList().size());
+    assertEquals(0, this.roundRobinScheduler.getProcessList().size());
   }
 
   @Test
@@ -112,16 +112,16 @@ public class StandardSchedulerTest {
                                                      executionListenerCaptor.capture()))
         .thenReturn(mockExecutionSlip);
 
-    this.standardScheduler.start();
-    this.standardScheduler.startProcess(this.mockProcess);
+    this.roundRobinScheduler.start();
+    this.roundRobinScheduler.startProcess(this.mockProcess);
 
     Mockito.verify(this.mockBlockingEngine).submit(mockExecutionSlip);
-    assertEquals(1, this.standardScheduler.getProcessList().size());
-    assertTrue(this.standardScheduler.getProcessList().contains(this.mockProcess));
+    assertEquals(1, this.roundRobinScheduler.getProcessList().size());
+    assertTrue(this.roundRobinScheduler.getProcessList().contains(this.mockProcess));
 
     executionListenerCaptor.getValue().onStepStopped();
 
-    assertEquals(0, this.standardScheduler.getProcessList().size());
+    assertEquals(0, this.roundRobinScheduler.getProcessList().size());
   }
 
   @Test
@@ -144,25 +144,25 @@ public class StandardSchedulerTest {
                                                      executionListenerCaptor.capture()))
         .thenReturn(mockExecutionSlip);
 
-    this.standardScheduler.start();
-    this.standardScheduler.startProcess(this.mockProcess);
+    this.roundRobinScheduler.start();
+    this.roundRobinScheduler.startProcess(this.mockProcess);
 
     Mockito.verify(this.mockBlockingEngine).submit(mockExecutionSlip);
-    assertEquals(1, this.standardScheduler.getProcessList().size());
-    assertTrue(this.standardScheduler.getProcessList().contains(this.mockProcess));
+    assertEquals(1, this.roundRobinScheduler.getProcessList().size());
+    assertTrue(this.roundRobinScheduler.getProcessList().contains(this.mockProcess));
 
     RuntimeException rtExc = new RuntimeException("X-test-runtime-exception-X");
     executionListenerCaptor.getValue().onStepException(rtExc);
 
-    assertEquals(0, this.standardScheduler.getProcessList().size());
+    assertEquals(0, this.roundRobinScheduler.getProcessList().size());
   }
 
   @Test
   public void testStartWhenAlreadyStarted() {
-    this.standardScheduler.start();
+    this.roundRobinScheduler.start();
 
     try {
-      this.standardScheduler.start();
+      this.roundRobinScheduler.start();
       fail("missing expected exception");
     } catch ( IllegalStateException isExc ) {
       assertEquals("already started", isExc.getMessage());
@@ -172,7 +172,7 @@ public class StandardSchedulerTest {
   @Test
   public void testStartProcessWhenSchedulerNotStarted() {
     try {
-      this.standardScheduler.startProcess(this.mockProcess);
+      this.roundRobinScheduler.startProcess(this.mockProcess);
       fail("missing expected exception");
     } catch ( IllegalStateException isExc ) {
       assertEquals("not yet started", isExc.getMessage());
@@ -183,11 +183,11 @@ public class StandardSchedulerTest {
   public void testStartProcessWhenAlreadyStarted() {
     Mockito.when(this.mockProcess.getNextStep()).thenReturn(this.mockStep);
 
-    this.standardScheduler.start();
-    this.standardScheduler.startProcess(this.mockProcess);
+    this.roundRobinScheduler.start();
+    this.roundRobinScheduler.startProcess(this.mockProcess);
 
     try {
-      this.standardScheduler.startProcess(this.mockProcess);
+      this.roundRobinScheduler.startProcess(this.mockProcess);
       fail("missing expected exception");
     } catch ( IllegalStateException isExc ) {
       assertEquals("process is already active", isExc.getMessage());
@@ -195,9 +195,9 @@ public class StandardSchedulerTest {
   }
 
   protected void setupStandardScheduler() {
-    this.standardScheduler.setBlockingEngine(this.mockBlockingEngine);
-    this.standardScheduler.setNonBlockingEngine(this.mockNonBlockingEngine);
+    this.roundRobinScheduler.setBlockingEngine(this.mockBlockingEngine);
+    this.roundRobinScheduler.setNonBlockingEngine(this.mockNonBlockingEngine);
 
-    this.standardScheduler.setExecutionSlipFactory(this.mockExecutionSlipFactory);
+    this.roundRobinScheduler.setStepExecutionSlipFactory(this.mockExecutionSlipFactory);
   }
 }

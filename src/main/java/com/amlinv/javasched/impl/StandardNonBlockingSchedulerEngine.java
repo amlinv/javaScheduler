@@ -18,7 +18,7 @@ public class StandardNonBlockingSchedulerEngine implements NonBlockingSchedulerE
 
   private Logger log = DEFAULT_LOGGER;
 
-  private int processorCount = 1;
+  private int processorCount;
 
   private Object processorSync = new Object();
   private ProcessorThread[] processorThreads;
@@ -32,6 +32,29 @@ public class StandardNonBlockingSchedulerEngine implements NonBlockingSchedulerE
   // PUBLIC METHODS
   //
   ////////////////////////
+
+  /**
+   * Create the non-blocking scheduler engine using the given number of processors.
+   *
+   * @param processorCount number of processor threads to use for execution of tasks.
+   */
+  public StandardNonBlockingSchedulerEngine(int processorCount) {
+    this.processorCount = processorCount;
+  }
+
+  /**
+   * Create the non-blocking scheduler engine with auto-detection of the number of system
+   *  processors using Runtime.availableProcessors().  Creates one less processing thread than
+   *  the number of detected system processors so one processor is always available for scheduler
+   *  and other activities, unless the system processor count is 1, in which case the processor
+   *  count falls-back to 1.
+   *
+   *  Process count is aut-detected using Runtime.availableProcessors().
+   */
+  public StandardNonBlockingSchedulerEngine() {
+    int numSysProcessor = Runtime.getRuntime().availableProcessors();
+    this.processorCount = Math.max(numSysProcessor - 1, 1);
+  }
 
   public int getProcessorCount() {
     return this.processorCount;

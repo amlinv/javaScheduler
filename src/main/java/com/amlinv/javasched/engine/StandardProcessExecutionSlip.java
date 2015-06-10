@@ -1,8 +1,11 @@
 package com.amlinv.javasched.engine;
 
+import com.amlinv.javasched.SchedulerProcess;
 import com.amlinv.javasched.SchedulerProcessExecutionSlip;
 
 /**
+ * Process execution slip that can be used to detect the state of a running process.
+ *
  * Created by art on 12/14/14.
  */
 public class StandardProcessExecutionSlip
@@ -26,12 +29,29 @@ public class StandardProcessExecutionSlip
    */
   private boolean stopped;
 
+  private final SchedulerProcess schedulerProcess;
   private final Object stateSync = new Object();
 
-  public StandardProcessExecutionSlip() {
+  private ValidationHooks validationHooks = new ValidationHooks();
+
+  public StandardProcessExecutionSlip(SchedulerProcess theSchedulerProcess) {
     this.runnable = true;
     this.started = false;
     this.stopped = false;
+    this.schedulerProcess = theSchedulerProcess;
+  }
+
+  public SchedulerProcess getSchedulerProcess() {
+    return schedulerProcess;
+  }
+
+  /**
+   * Set validation hooks to the ones given; this is intended for testing purposes only.
+   *
+   * @param validationHooks new
+   */
+  public void setValidationHook(ValidationHooks validationHooks) {
+    this.validationHooks = validationHooks;
   }
 
   @Override
@@ -56,11 +76,14 @@ public class StandardProcessExecutionSlip
           long now = System.nanoTime();
           if (now < endMark) {
             long remaining = endMark - now;
+            this.validationHooks.onStartWaitForCompletion();
             this.stateSync.wait(remaining / 1000000L, (int) (remaining % 1000000L));
           } else {
             expired = true;
+            this.validationHooks.onWaitForCompleteTimeoutExpired();
           }
         } else {
+          this.validationHooks.onStartWaitForCompletion();
           this.stateSync.wait();
         }
       }
@@ -90,6 +113,18 @@ public class StandardProcessExecutionSlip
       this.stopped = true;
       this.runnable = false;
       this.stateSync.notifyAll();
+    }
+  }
+
+  ////////////////////
+  // INTERNAL CLASSES
+  ////////////////////
+
+  protected class ValidationHooks {
+    public void onStartWaitForCompletion() {
+    }
+
+    public void onWaitForCompleteTimeoutExpired() {
     }
   }
 }

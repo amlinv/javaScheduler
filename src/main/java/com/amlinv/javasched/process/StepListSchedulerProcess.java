@@ -1,4 +1,4 @@
-package com.amlinv.javasched.impl;
+package com.amlinv.javasched.process;
 
 import com.amlinv.javasched.SchedulerProcess;
 import com.amlinv.javasched.Step;
@@ -25,8 +25,10 @@ public class StepListSchedulerProcess implements SchedulerProcess {
 
   private final Step waitMoreWorkStep = new WaitForMoreWorkStep();
 
-  private boolean stopped = false;
+  private volatile boolean stopped = false;
   private boolean autoStop = false;
+
+  private ValidationHook validationHook = new ValidationHook();
 
   public boolean isAutoStop() {
     return autoStop;
@@ -40,9 +42,21 @@ public class StepListSchedulerProcess implements SchedulerProcess {
     return stopped;
   }
 
+  public void setLog(Logger log) {
+    this.log = log;
+  }
+
+  public void setValidationHook(ValidationHook validationHook) {
+    this.validationHook = validationHook;
+  }
+
   @Override
   public Step getNextStep() {
     Step result;
+
+    if (stopped) {
+      return null;
+    }
 
     synchronized (this.queue) {
       result = this.queue.poll();
@@ -80,6 +94,7 @@ public class StepListSchedulerProcess implements SchedulerProcess {
   public void waitUntilFinished() throws InterruptedException {
     synchronized (this.queue) {
       while (!this.stopped) {
+        this.validationHook.onWaitOnQueue();
         this.queue.wait();
       }
     }
@@ -100,10 +115,10 @@ public class StepListSchedulerProcess implements SchedulerProcess {
       synchronized (parent.queue) {
         while (parent.queue.isEmpty() && (!parent.stopped)) {
           try {
+            parent.validationHook.onWaitOnQueue();
             parent.queue.wait();
           } catch (InterruptedException intExc) {
-            log.info("wait for more work interrupted; checking for more work and shutdown now");
-
+            log.info("wait for more work interrupted; checking for more work and possible shutdown now");
           }
         }
       }
@@ -112,6 +127,11 @@ public class StepListSchedulerProcess implements SchedulerProcess {
     @Override
     public boolean isBlocking() {
       return true;
+    }
+  }
+
+  protected static class ValidationHook {
+    public void onWaitOnQueue() throws InterruptedException {
     }
   }
 }

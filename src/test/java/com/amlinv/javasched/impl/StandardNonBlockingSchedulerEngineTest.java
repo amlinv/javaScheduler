@@ -38,11 +38,21 @@ public class StandardNonBlockingSchedulerEngineTest {
   }
 
   @Test
-  public void testGetSetProcessorCount() throws Exception {
-    assertEquals(1, this.engine.getProcessorCount());
+  public void testConstructorWithProcessorCount() {
+    StandardNonBlockingSchedulerEngine engine1 = new StandardNonBlockingSchedulerEngine(3131);
+    assertEquals(3131, engine1.getProcessorCount());
+  }
 
-    this.engine.setProcessorCount(13);
-    assertEquals(13, this.engine.getProcessorCount());
+  @Test
+  public void testGetSetProcessorCount() throws Exception {
+    if ( Runtime.getRuntime().availableProcessors() > 1 ) {
+      assertEquals(Runtime.getRuntime().availableProcessors() - 1, this.engine.getProcessorCount());
+    } else {
+      assertEquals(1, this.engine.getProcessorCount());
+    }
+
+    this.engine.setProcessorCount(1313);
+    assertEquals(1313, this.engine.getProcessorCount());
   }
 
   @Test
@@ -93,8 +103,8 @@ public class StandardNonBlockingSchedulerEngineTest {
 
     this.engine.initiateShutdown();
 
-    Mockito.verify(this.mockLogger, Mockito.timeout(1000))
-        .info("stopping processor thread #{} on interrupt", 0);
+    Mockito.verify(this.mockLogger, Mockito.timeout(1000).times(this.engine.getProcessorCount()))
+        .info(Mockito.eq("stopping processor thread #{} on interrupt"), Mockito.anyInt());
   }
 
   @Test
