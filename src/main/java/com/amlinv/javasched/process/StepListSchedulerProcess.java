@@ -84,6 +84,19 @@ public class StepListSchedulerProcess implements SchedulerProcess {
     }
   }
 
+  /**
+   * Return the number of steps thare are queued, waiting to be started.
+   *
+   * @return the number of queued steps.
+   */
+  public int getPendingStepCount() {
+    int result;
+    synchronized (this.queue) {
+      result = this.queue.size();
+    }
+    return result;
+  }
+
   public void shutdown() {
     this.stopped = true;
     synchronized (this.queue) {

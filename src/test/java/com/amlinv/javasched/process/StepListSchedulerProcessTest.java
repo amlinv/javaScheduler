@@ -5,8 +5,6 @@ import com.amlinv.javasched.Step;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +35,23 @@ public class StepListSchedulerProcessTest {
     this.mockLogger = Mockito.mock(Logger.class);
 
     this.process.setValidationHook(this.validationHook);
+  }
+
+  @Test
+  public void testGetStepCount() {
+    assertEquals(0, this.process.getPendingStepCount());
+
+    this.process.addStep(this.mockStep);
+    assertEquals(1, this.process.getPendingStepCount());
+
+    this.process.addStep(Mockito.mock(Step.class));
+    assertEquals(2, this.process.getPendingStepCount());
+
+    this.process.getNextStep();
+    assertEquals(1, this.process.getPendingStepCount());
+
+    this.process.getNextStep();
+    assertEquals(0, this.process.getPendingStepCount());
   }
 
   @Test
