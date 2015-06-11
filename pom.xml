@@ -105,6 +105,12 @@
                 </configuration>
             </plugin>
 
+            <!-- RELEASE PLUGIN -->
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.2</version>
+            </plugin>
+
             <!--  RELEASE JAVADOCS -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -191,7 +197,7 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>ossrh-snapshot</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
