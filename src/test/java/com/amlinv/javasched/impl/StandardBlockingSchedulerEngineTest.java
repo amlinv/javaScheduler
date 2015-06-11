@@ -123,6 +123,8 @@ public class StandardBlockingSchedulerEngineTest {
     assertTrue(latch1.await(1500, TimeUnit.MILLISECONDS));
     assertTrue(latch2.await(1500, TimeUnit.MILLISECONDS));
 
+    Mockito.verify(this.validationHooks, Mockito.timeout(100)).onThreadNowIdle();
+
     assertEquals(1, this.engine.getNumStartedThread());
     assertEquals(2, this.engine.getTotalStepsStarted());
     assertEquals(1, this.engine.getNumIdleThread());
