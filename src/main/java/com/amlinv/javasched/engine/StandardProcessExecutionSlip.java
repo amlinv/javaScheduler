@@ -60,6 +60,7 @@ public class StandardProcessExecutionSlip
     this.schedulerProcess = theSchedulerProcess;
   }
 
+  @Override
   public SchedulerProcess getSchedulerProcess() {
     return schedulerProcess;
   }

@@ -28,4 +28,5 @@ public interface SchedulerProcessExecutionSlip {
   void    waitUntilComplete() throws InterruptedException;
   void    waitUntilComplete(long timeoutMilli, long timeoutNano) throws InterruptedException;
   boolean isRunnable();
+  SchedulerProcess getSchedulerProcess();
 }
